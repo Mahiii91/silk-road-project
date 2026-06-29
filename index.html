@@ -580,12 +580,12 @@
     display: grid;
     grid-template-columns: 1.6fr 1fr;
     gap: 0;
-    height: calc(100vh - 132px);
+    min-height: calc(100vh - 132px);
   }
 
   @media (max-width: 880px) {
     .layout { grid-template-columns: 1fr; height: auto; }
-    .map-panel { height: 60vh; }
+    .map-panel { height: auto; }
     .log { height: 60vh; }
   }
 
@@ -600,8 +600,8 @@
   #map {
     height: 520px;
     width: 100%;
-    flex: 1 1 auto;
-    min-height: 0;
+    flex: 0 0 520px;
+    min-height: 520px;
     background: #EDE0C4;
     filter: sepia(12%) saturate(85%);
   }
@@ -2626,4 +2626,3 @@
 </script>
 </body>
 </html>
-git push --force
