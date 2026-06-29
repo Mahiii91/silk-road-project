@@ -1,0 +1,2628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>The Silk Road — A Caravan's Journey</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,600&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --parchment: #F5EDD8;
+    --parchment-deep: #EDE0C4;
+    --ink: #2C1A0E;
+    --ink-soft: #6B5640;
+    --lacquer: #3D1F00;
+    --jade: #1F5C4F;
+    --gold: #8B6914;
+    --line: rgba(44, 26, 14, 0.2);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--parchment);
+    color: var(--ink);
+    font-family: 'Source Sans Pro', sans-serif;
+  }
+
+  html {
+    scroll-padding-top: 46px;
+  }
+
+  /* ---------- texture ---------- */
+  body {
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(255,255,255,0.25), transparent 50%),
+      radial-gradient(ellipse at 80% 90%, rgba(0,0,0,0.06), transparent 55%),
+      var(--parchment);
+    padding-top: 46px;
+  }
+
+  /* ---------- top navigation ---------- */
+  .site-nav {
+    align-items: center;
+    background: var(--parchment);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: center;
+    left: 0;
+    min-height: 46px;
+    padding: 0 1.2rem;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 1000;
+  }
+
+  .site-nav-toggle {
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+  }
+
+  .site-nav-menu {
+    align-items: center;
+    display: flex;
+    gap: 1.1rem;
+    justify-content: center;
+  }
+
+  .site-nav a {
+    color: #C9A84C;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.82rem;
+    font-variant: small-caps;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    line-height: 1;
+    text-decoration: none;
+  }
+
+  .site-nav a:hover,
+  .site-nav a:focus-visible {
+    color: var(--gold);
+  }
+
+  .site-nav a:focus-visible,
+  .site-nav-button:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 3px;
+  }
+
+  .site-nav-button {
+    background: transparent;
+    border: 0;
+    color: #C9A84C;
+    cursor: pointer;
+    display: none;
+    height: 38px;
+    margin-left: auto;
+    padding: 0;
+    position: relative;
+    width: 38px;
+  }
+
+  .site-nav-button span,
+  .site-nav-button::before,
+  .site-nav-button::after {
+    background: currentColor;
+    content: '';
+    height: 2px;
+    left: 8px;
+    position: absolute;
+    right: 8px;
+  }
+
+  .site-nav-button::before { top: 11px; }
+  .site-nav-button span { top: 18px; }
+  .site-nav-button::after { top: 25px; }
+
+  @media (max-width: 767px) {
+    .site-nav {
+      justify-content: flex-end;
+      padding: 0 0.75rem;
+    }
+
+    .site-nav-button {
+      display: block;
+    }
+
+    .site-nav-menu {
+      align-items: stretch;
+      background: var(--parchment);
+      border-bottom: 1px solid var(--line);
+      border-top: 1px solid var(--line);
+      display: none;
+      flex-direction: column;
+      gap: 0;
+      left: 0;
+      padding: 0.5rem 0.95rem 0.75rem;
+      position: absolute;
+      right: 0;
+      top: 46px;
+    }
+
+    .site-nav-menu a {
+      padding: 0.55rem 0;
+    }
+
+    .site-nav-toggle:checked ~ .site-nav-menu {
+      display: flex;
+    }
+  }
+
+  /* ---------- header ---------- */
+  header {
+    padding: 2.2rem 2.5rem 1.4rem;
+    border-bottom: 1px solid var(--line);
+    position: relative;
+  }
+
+  .eyebrow {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--lacquer);
+    margin: 0 0 0.5rem;
+  }
+
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 700;
+    font-size: clamp(1.8rem, 3.2vw, 2.8rem);
+    margin: 0 0 0.4rem;
+    line-height: 1.05;
+  }
+
+  header p.sub {
+    font-size: 0.98rem;
+    color: var(--ink-soft);
+    max-width: 46ch;
+    margin: 0;
+  }
+
+  header p.source-sub {
+    color: var(--gold);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.9em;
+    font-style: italic;
+    max-width: 58ch;
+    margin: 0.35rem 0 0;
+  }
+
+  /* ---------- documents ---------- */
+  .documents-section {
+    background: var(--parchment);
+    border-top: 1px solid var(--line);
+    padding: 3rem 2.5rem 3.4rem;
+  }
+
+  .documents-inner {
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  .documents-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 700;
+    font-size: clamp(1.8rem, 3.2vw, 2.8rem);
+    line-height: 1.05;
+    margin: 0 0 0.4rem;
+  }
+
+  .documents-subheading {
+    color: var(--ink-soft);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    font-style: italic;
+    line-height: 1.35;
+    margin: 0 0 1.5rem;
+    max-width: 62ch;
+  }
+
+  .documents-list {
+    background: #f5ede0;
+    border: 1px solid rgba(201,168,76,0.3);
+    padding: 1.25rem 1.35rem;
+  }
+
+  .document-card {
+    padding: 0;
+  }
+
+  .document-card + .document-card {
+    border-top: 1px solid rgba(201,168,76,0.34);
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+  }
+
+  .document-title {
+    color: #C9A84C;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3em;
+    font-weight: 700;
+    line-height: 1.1;
+    margin: 0 0 0.25rem;
+  }
+
+  .document-meta {
+    color: var(--ink-soft);
+    font-size: 0.8em;
+    font-variant: small-caps;
+    letter-spacing: 0.08em;
+    line-height: 1.35;
+    margin: 0 0 0.75rem;
+  }
+
+  .document-description,
+  .document-detail {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: 0.55rem 0 0;
+  }
+
+  .document-detail strong {
+    color: var(--lacquer);
+    font-weight: 700;
+  }
+
+  .document-detail.significance {
+    font-style: italic;
+  }
+
+  /* ---------- Iranian worlds ---------- */
+  .iranian-worlds-section {
+    background: var(--parchment);
+    border-top: 1px solid var(--line);
+    padding: 3rem 2.5rem 3.4rem;
+  }
+
+  .iranian-worlds-inner {
+    max-width: 1040px;
+    margin: 0 auto;
+  }
+
+  .iranian-worlds-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 700;
+    font-size: clamp(1.8rem, 3.2vw, 2.8rem);
+    line-height: 1.05;
+    margin: 0 0 0.4rem;
+  }
+
+  .iranian-worlds-subheading {
+    color: var(--ink-soft);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    font-style: italic;
+    line-height: 1.35;
+    margin: 0 0 1.5rem;
+    max-width: 68ch;
+  }
+
+  .iranian-worlds-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .iranian-profile-card {
+    background: #f5ede0;
+    border: 1px solid rgba(201,168,76,0.3);
+    border-top: 3px solid #C9A84C;
+    color: var(--ink);
+    padding: 1.1rem;
+  }
+
+  .iranian-profile-name {
+    color: #C9A84C;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.1;
+    margin: 0 0 0.75rem;
+  }
+
+  .iranian-profile-detail {
+    font-size: 0.94rem;
+    line-height: 1.45;
+    margin: 0.55rem 0 0;
+  }
+
+  .iranian-profile-detail strong {
+    color: var(--lacquer);
+    font-weight: 700;
+  }
+
+  .site-chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+  }
+
+  .site-chip {
+    background: rgba(201,168,76,0.14);
+    border: 1px solid rgba(201,168,76,0.34);
+    border-radius: 999px;
+    color: var(--gold);
+    font-size: 0.75em;
+    line-height: 1;
+    padding: 0.28rem 0.48rem;
+  }
+
+  .iranian-profile-legacy {
+    color: var(--ink-soft);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    font-style: italic;
+    line-height: 1.4;
+    margin: 0.85rem 0 0;
+  }
+
+  @media (max-width: 700px) {
+    .iranian-worlds-section {
+      padding: 2.5rem 1.2rem 2.8rem;
+    }
+
+    .iranian-worlds-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ---------- objects ---------- */
+  .objects-section {
+    background: var(--parchment);
+    border-top: 1px solid var(--line);
+    padding: 3rem 2.5rem 3.4rem;
+  }
+
+  .objects-inner {
+    max-width: 1040px;
+    margin: 0 auto;
+  }
+
+  .objects-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 700;
+    font-size: clamp(1.8rem, 3.2vw, 2.8rem);
+    line-height: 1.05;
+    margin: 0 0 0.4rem;
+  }
+
+  .objects-subheading {
+    color: var(--ink-soft);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    font-style: italic;
+    line-height: 1.35;
+    margin: 0 0 1.5rem;
+    max-width: 64ch;
+  }
+
+  .objects-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .object-card {
+    background: #f5ede0;
+    border: 1px solid rgba(201,168,76,0.3);
+    color: var(--ink);
+    font-family: 'Cormorant Garamond', serif;
+    min-height: 100%;
+    padding: 1.05rem;
+  }
+
+  .object-icon {
+    display: block;
+    font-size: 2rem;
+    line-height: 1;
+    margin-bottom: 0.6rem;
+  }
+
+  .object-title {
+    color: #C9A84C;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.28rem;
+    font-weight: 700;
+    line-height: 1.1;
+    margin: 0 0 0.55rem;
+  }
+
+  .object-text {
+    font-size: 1rem;
+    line-height: 1.45;
+    margin: 0;
+  }
+
+  @media (max-width: 900px) {
+    .objects-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 640px) {
+    .objects-section {
+      padding: 2.5rem 1.2rem 2.8rem;
+    }
+
+    .objects-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ---------- cities ---------- */
+  .cities-section {
+    background: var(--parchment);
+    border-top: 1px solid var(--line);
+    padding: 3rem 2.5rem 3.4rem;
+  }
+
+  .cities-inner {
+    max-width: 1040px;
+    margin: 0 auto;
+  }
+
+  .cities-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 700;
+    font-size: clamp(1.8rem, 3.2vw, 2.8rem);
+    line-height: 1.05;
+    margin: 0 0 0.4rem;
+  }
+
+  .cities-subheading {
+    color: var(--ink-soft);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    font-style: italic;
+    line-height: 1.35;
+    margin: 0 0 1.5rem;
+    max-width: 70ch;
+  }
+
+  .cities-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .city-card {
+    background: #f5ede0;
+    border: 1px solid rgba(201,168,76,0.3);
+    color: var(--ink);
+    padding: 1.05rem;
+  }
+
+  .city-card-title {
+    color: #C9A84C;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    line-height: 1.1;
+    margin: 0 0 0.35rem;
+  }
+
+  .city-card-active {
+    color: var(--ink-soft);
+    font-size: 0.78rem;
+    font-variant: small-caps;
+    letter-spacing: 0.08em;
+    line-height: 1.35;
+    margin: 0 0 0.7rem;
+  }
+
+  .city-card-description {
+    font-size: 0.94rem;
+    line-height: 1.48;
+    margin: 0;
+  }
+
+  .city-language-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.8rem;
+  }
+
+  .city-language-chip {
+    border: 1px solid rgba(58, 42, 30, 0.16);
+    border-radius: 999px;
+    background: rgba(245, 237, 216, 0.72);
+    color: var(--ink);
+    font-size: 0.75em;
+    line-height: 1;
+    padding: 0.3rem 0.48rem;
+  }
+
+  .city-language-chip.iranian {
+    background: #C9A84C;
+    border-color: #C9A84C;
+    color: #2C1A0E;
+  }
+
+  @media (max-width: 900px) {
+    .cities-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 640px) {
+    .cities-section {
+      padding: 2.5rem 1.2rem 2.8rem;
+    }
+
+    .cities-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .compass {
+    position: absolute;
+    right: 2.5rem;
+    top: 2rem;
+    width: 56px;
+    height: 56px;
+    opacity: 0.85;
+  }
+
+  /* ---------- layout ---------- */
+  .layout {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 0;
+    height: calc(100vh - 132px);
+  }
+
+  @media (max-width: 880px) {
+    .layout { grid-template-columns: 1fr; height: auto; }
+    .map-panel { height: 60vh; }
+    .log { height: 60vh; }
+  }
+
+  /* ---------- map ---------- */
+  .map-panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  #map {
+    height: 520px;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    background: #EDE0C4;
+    filter: sepia(12%) saturate(85%);
+  }
+
+  /* ---------- religion spread overlay ---------- */
+  #religion-overlay {
+    border-top: 1px solid var(--line);
+    background: var(--parchment-deep);
+    padding: 0.65rem 0.9rem 0.7rem;
+  }
+
+  .religion-toggles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .religion-toggle {
+    border: 1px solid var(--religion-color);
+    border-radius: 999px;
+    background: rgba(235, 224, 200, 0.65);
+    color: var(--religion-color);
+    cursor: pointer;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.64rem;
+    letter-spacing: 0.04em;
+    padding: 0.34rem 0.52rem;
+  }
+
+  .religion-toggle[aria-pressed="true"] {
+    background: var(--religion-color);
+    color: #fffaf0;
+    box-shadow: inset 0 0 0 1px rgba(255, 250, 240, 0.5);
+  }
+
+  .religion-toggle:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  .religion-spread-panel {
+    border-left: 3px solid var(--gold);
+    color: var(--ink);
+    font-size: 0.82rem;
+    line-height: 1.4;
+    margin-top: 0.65rem;
+    padding-left: 0.65rem;
+  }
+
+  .religion-spread-panel p {
+    margin: 0.35rem 0;
+  }
+
+  .religion-spread-panel:empty {
+    display: none;
+  }
+
+  .religion-spread-name {
+    color: var(--lacquer);
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.64rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .religion-caption {
+    color: var(--ink-soft);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.76rem;
+    font-style: italic;
+    line-height: 1.3;
+    margin: 0.6rem 0 0;
+  }
+
+  /* ---------- dynasty timeline ---------- */
+  #timeline {
+    width: 100%;
+    min-height: 172px;
+    padding: 0.78rem 0.9rem 0.85rem;
+    border-top: 1px solid var(--line);
+    background: var(--parchment-deep);
+  }
+
+  .timeline-instruction {
+    color: var(--ink-soft);
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.66rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .timeline-head {
+    align-items: center;
+    display: flex;
+    gap: 0.75rem;
+    justify-content: space-between;
+  }
+
+  .timeline-reset {
+    border: 1px solid rgba(58, 42, 30, 0.28);
+    background: rgba(235, 224, 200, 0.62);
+    color: var(--ink);
+    cursor: pointer;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    padding: 0.32rem 0.48rem;
+    text-transform: uppercase;
+  }
+
+  .timeline-reset:hover { background: rgba(201, 166, 70, 0.22); }
+  .timeline-reset:focus-visible { outline: 2px solid var(--lacquer); outline-offset: 2px; }
+
+  .timeline-track {
+    position: relative;
+    height: 64px;
+    margin-top: 0.58rem;
+    border: 1px solid rgba(58, 42, 30, 0.2);
+    background: rgba(235, 224, 200, 0.62);
+  }
+
+  .timeline-block {
+    position: absolute;
+    top: 12px;
+    height: 38px;
+    border: 0;
+    border-right: 1px solid rgba(58, 42, 30, 0.24);
+    color: #fffaf0;
+    cursor: pointer;
+    font-family: 'Source Sans Pro', sans-serif;
+    overflow: hidden;
+    padding: 0.36rem 0.42rem;
+    text-align: left;
+    transition: filter 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    white-space: nowrap;
+    z-index: 1;
+  }
+
+  .timeline-block:hover { filter: brightness(1.08); }
+  .timeline-block.dynasty-active {
+    box-shadow: inset 0 0 0 3px rgba(255, 250, 240, 0.8);
+    filter: brightness(1.12) saturate(1.08);
+  }
+  .timeline-block:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: -4px;
+  }
+
+  .timeline-name {
+    display: block;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.84rem;
+    font-weight: 700;
+    line-height: 1.1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .timeline-dates {
+    display: block;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.54rem;
+    line-height: 1.25;
+    margin-top: 0.2rem;
+    opacity: 0.9;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .timeline-boundary {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--ink);
+    opacity: 0.65;
+    z-index: 2;
+  }
+
+  .timeline-axis {
+    position: relative;
+    height: 26px;
+    color: var(--ink-soft);
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.62rem;
+    margin-top: 0.3rem;
+  }
+
+  .timeline-axis-label {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+
+  .timeline-axis-label.start { left: 0; transform: none; }
+  .timeline-axis-label.end { right: 0; transform: none; }
+  .timeline-axis-label.boundary {
+    color: var(--lacquer);
+    font-weight: 600;
+  }
+
+  .timeline-detail {
+    min-height: 48px;
+    border-top: 1px solid rgba(58, 42, 30, 0.14);
+    margin-top: 0.2rem;
+    padding-top: 0.55rem;
+  }
+
+  .timeline-detail h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.98rem;
+    margin: 0 0 0.18rem;
+  }
+
+  .timeline-detail p {
+    font-size: 0.84rem;
+    line-height: 1.35;
+    margin: 0;
+  }
+
+  .timeline-detail cite {
+    color: var(--ink-soft);
+    display: block;
+    font-size: 0.72rem;
+    font-style: normal;
+    margin-top: 0.32rem;
+  }
+
+  /* ---------- commodity explorer ---------- */
+  #commodity-explorer {
+    border-top: 1px solid var(--line);
+    background: var(--parchment);
+    padding: 0.85rem 0.9rem 0.95rem;
+  }
+
+  .commodity-grid {
+    display: grid;
+    gap: 0.45rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .commodity-card {
+    min-height: 98px;
+    border: 1px solid rgba(58, 42, 30, 0.22);
+    border-radius: 4px;
+    background: rgba(221, 208, 174, 0.38);
+    color: var(--ink);
+    cursor: pointer;
+    padding: 0.55rem;
+    text-align: left;
+  }
+
+  .commodity-card:hover { background: rgba(201, 166, 70, 0.17); }
+  .commodity-card.commodity-active {
+    border-color: var(--commodity-color);
+    box-shadow: inset 0 0 0 2px var(--commodity-color);
+  }
+  .commodity-card:focus-visible { outline: 2px solid var(--lacquer); outline-offset: 2px; }
+
+  .commodity-emoji {
+    display: block;
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+
+  .commodity-name {
+    display: block;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.94rem;
+    font-weight: 700;
+    margin-top: 0.25rem;
+  }
+
+  .commodity-direction {
+    display: block;
+    color: var(--jade);
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.58rem;
+    letter-spacing: 0.05em;
+    margin-top: 0.18rem;
+    text-transform: uppercase;
+  }
+
+  .commodity-summary {
+    display: -webkit-box;
+    font-size: 0.72rem;
+    line-height: 1.25;
+    margin-top: 0.32rem;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .commodity-detail {
+    border-top: 1px solid var(--line);
+    margin-top: 0.75rem;
+    padding-top: 0.7rem;
+  }
+
+  .commodity-detail:empty { display: none; }
+  .commodity-detail h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    margin: 0 0 0.26rem;
+  }
+  .commodity-detail p {
+    font-size: 0.86rem;
+    line-height: 1.42;
+    margin: 0.4rem 0;
+  }
+  .commodity-detail blockquote {
+    border-left: 3px solid var(--commodity-color);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.92rem;
+    line-height: 1.35;
+    margin: 0.65rem 0 0;
+    padding-left: 0.7rem;
+  }
+
+  .commodity-clear {
+    border: 1px solid rgba(58, 42, 30, 0.28);
+    background: rgba(235, 224, 200, 0.7);
+    color: var(--ink);
+    cursor: pointer;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    margin-top: 0.55rem;
+    padding: 0.34rem 0.5rem;
+    text-transform: uppercase;
+  }
+
+  .commodity-clear:hover { background: rgba(156, 43, 31, 0.12); }
+  .commodity-clear:focus-visible { outline: 2px solid var(--lacquer); outline-offset: 2px; }
+
+  .leaflet-overlay-pane .commodity-route {
+    animation: commodity-dash 1.3s linear infinite;
+    stroke-linecap: round;
+  }
+
+  @keyframes commodity-dash {
+    to { stroke-dashoffset: -28; }
+  }
+
+  @media (max-width: 640px) {
+    #timeline { min-height: 196px; padding-inline: 0.65rem; }
+    .timeline-block {
+      padding: 0.32rem 0.28rem;
+    }
+    .timeline-name {
+      font-size: 0.66rem;
+    }
+    .timeline-dates { font-size: 0.48rem; }
+  }
+
+  .leaflet-popup-content-wrapper {
+    background: var(--parchment);
+    border: 1px solid var(--ink);
+    border-radius: 2px;
+    box-shadow: 3px 3px 0 rgba(58,42,30,0.25);
+  }
+  .leaflet-popup-content {
+    font-family: 'Source Sans Pro', sans-serif;
+    color: var(--ink);
+    margin: 10px 12px;
+  }
+  .leaflet-popup-tip { background: var(--parchment); border: 1px solid var(--ink); }
+  .popup-city {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 1rem;
+    margin: 0 0 2px;
+  }
+  .popup-meta {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.68rem;
+    color: var(--lacquer);
+    letter-spacing: 0.04em;
+  }
+
+  /* ---------- log sidebar ---------- */
+  .log {
+    border-left: 1px solid var(--line);
+    overflow-y: auto;
+    padding: 0;
+    background: var(--parchment-deep);
+  }
+
+  .log-header {
+    position: sticky;
+    top: 0;
+    background: var(--parchment-deep);
+    padding: 1.1rem 1.6rem 0.8rem;
+    border-bottom: 1px solid var(--line);
+    z-index: 5;
+  }
+
+  .log-header .leg-label {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .log-header .leg-distance {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.7rem;
+    color: var(--jade);
+    margin-top: 2px;
+  }
+
+  .stops {
+    padding: 0.4rem 0 3rem;
+  }
+
+  .stop {
+    padding: 1.1rem 1.6rem;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    opacity: 0.45;
+    transition: opacity 0.4s ease, background 0.4s ease;
+    position: relative;
+  }
+
+  .stop.active {
+    opacity: 1;
+    background: rgba(201, 166, 70, 0.16);
+  }
+
+  .stop.visited { opacity: 0.75; }
+
+  .stop::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--lacquer);
+    transform: scaleY(0);
+    transition: transform 0.4s ease;
+  }
+  .stop.active::before { transform: scaleY(1); }
+
+  .stop-index {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.68rem;
+    color: var(--lacquer);
+    letter-spacing: 0.08em;
+  }
+
+  .stop-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 1.15rem;
+    margin: 0.15rem 0 0.3rem;
+  }
+
+  .stop-region {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.66rem;
+    color: var(--jade);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.5rem;
+  }
+
+  .stop-desc {
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: var(--ink);
+    margin: 0;
+  }
+
+  .stop-trade {
+    margin-top: 0.6rem;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+
+  /* ---------- city panel ---------- */
+  #city-panel {
+    display: none;
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 320px;
+    max-width: 88vw;
+    height: 100vh;
+    overflow-y: auto;
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(255,255,255,0.22), transparent 52%),
+      var(--parchment);
+    border-left: 1px solid rgba(58, 42, 30, 0.24);
+    box-shadow: -12px 0 24px rgba(58, 42, 30, 0.22);
+    color: var(--ink);
+    padding: 1.35rem 1.35rem 1.6rem;
+    z-index: 1000;
+  }
+
+  .city-panel-close {
+    position: absolute;
+    top: 0.7rem;
+    right: 0.75rem;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid rgba(58, 42, 30, 0.26);
+    background: rgba(221, 208, 174, 0.7);
+    color: var(--ink);
+    cursor: pointer;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.35rem;
+    line-height: 1;
+  }
+
+  .city-panel-close:hover { background: rgba(156, 43, 31, 0.12); }
+  .city-panel-close:focus-visible { outline: 2px solid var(--lacquer); outline-offset: 2px; }
+
+  #city-panel h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.55rem;
+    line-height: 1.05;
+    margin: 0.55rem 2.2rem 0.35rem 0;
+  }
+
+  .city-panel-meta {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.68rem;
+    line-height: 1.45;
+    color: var(--jade);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 1rem;
+  }
+
+  .city-panel-section {
+    margin-top: 1.05rem;
+  }
+
+  .city-panel-label {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.66rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--lacquer);
+    margin-bottom: 0.45rem;
+  }
+
+  .dynasty-control-bar {
+    display: flex;
+    min-height: 18px;
+    border: 1px solid rgba(58, 42, 30, 0.2);
+    background: rgba(58, 42, 30, 0.08);
+  }
+
+  .dynasty-control-segment {
+    flex: var(--years) 1 0;
+    min-width: 22px;
+  }
+
+  .dynasty-control-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+  }
+
+  .dynasty-control-label {
+    color: var(--ink-soft);
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .city-panel-empty {
+    padding: 0.45rem 0.55rem;
+    color: var(--ink-soft);
+    font-size: 0.82rem;
+    font-style: italic;
+  }
+
+  .city-panel-summary {
+    font-size: 0.95rem;
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  .city-panel-quote {
+    border-left: 3px solid var(--gold);
+    margin: 0;
+    padding: 0.65rem 0 0.65rem 0.8rem;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    line-height: 1.35;
+    background: rgba(221, 208, 174, 0.42);
+  }
+
+  .religion-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  .religion-badge {
+    border: 1px solid rgba(58, 42, 30, 0.18);
+    color: #fffaf0;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    line-height: 1;
+    padding: 0.35rem 0.45rem;
+    text-transform: uppercase;
+  }
+
+  .city-panel-source {
+    border-top: 1px solid var(--line);
+    color: var(--ink-soft);
+    font-size: 0.76rem;
+    line-height: 1.4;
+    margin-top: 1.15rem;
+    padding-top: 0.75rem;
+  }
+
+  /* ---------- controls ---------- */
+  .controls {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
+    padding: 0.9rem 1.6rem;
+    background: var(--parchment-deep);
+    border-top: 1px solid var(--line);
+  }
+
+  .language-control,
+  .faith-control {
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+  }
+
+  .language-legend {
+    color: var(--ink-soft);
+    display: none;
+    font-size: 0.68rem;
+    line-height: 1.2;
+  }
+
+  .language-control.is-active .language-legend {
+    display: block;
+  }
+
+  .language-legend .iranian-language,
+  .language-tag .iranian-language {
+    color: #C9A84C;
+  }
+
+  .language-tooltip {
+    text-align: center;
+  }
+
+  .faith-dot-row {
+    align-items: center;
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    margin-top: 0.2rem;
+  }
+
+  .faith-dot,
+  .faith-legend-dot {
+    border-radius: 50%;
+    display: inline-block;
+    flex: 0 0 auto;
+    height: 8px;
+    width: 8px;
+  }
+
+  .faith-map-legend {
+    background: rgba(245, 237, 216, 0.94);
+    border: 1px solid rgba(201,168,76,0.3);
+    box-shadow: 2px 2px 0 rgba(58,42,30,0.14);
+    color: var(--ink);
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.72rem;
+    line-height: 1.25;
+    padding: 0.55rem 0.65rem;
+  }
+
+  .faith-map-legend-title {
+    color: var(--lacquer);
+    font-size: 0.64rem;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.35rem;
+    text-transform: uppercase;
+  }
+
+  .faith-map-legend-item {
+    align-items: center;
+    display: flex;
+    gap: 0.38rem;
+    margin-top: 0.22rem;
+    white-space: nowrap;
+  }
+
+  .faith-hover-tooltip {
+    max-width: 230px;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .language-tag {
+    color: var(--ink-soft);
+    display: block;
+    font-size: 0.68rem;
+    line-height: 1.25;
+    margin-top: 0.2rem;
+    white-space: normal;
+  }
+
+  button.ctrl {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: var(--ink);
+    color: var(--parchment);
+    border: none;
+    padding: 0.55rem 0.9rem;
+    cursor: pointer;
+    border-radius: 2px;
+  }
+  button.ctrl:hover { background: var(--lacquer); }
+  button.ctrl:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  /* ---------- custom marker ---------- */
+  .caravan-marker {
+    filter: drop-shadow(2px 2px 1px rgba(0,0,0,0.35));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stop { transition: none; }
+    .leaflet-overlay-pane .commodity-route { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="site-nav" aria-label="Primary navigation">
+  <input class="site-nav-toggle" type="checkbox" id="site-nav-toggle" aria-label="Toggle navigation">
+  <label class="site-nav-button" for="site-nav-toggle" aria-hidden="true">
+    <span></span>
+  </label>
+  <div class="site-nav-menu">
+    <a href="#home">Home</a>
+    <a href="#documents">Documents</a>
+    <a href="#map">Map</a>
+    <a href="#iranian-worlds">Iranian Worlds</a>
+    <a href="#objects">Objects</a>
+    <a href="#cities">Cities</a>
+    <a href="#method">Method</a>
+  </div>
+</nav>
+
+<header id="home">
+  <p class="eyebrow">Overland Trade · c. 1st century BCE – 14th century CE</p>
+  <h1>The Silk Road</h1>
+  <p class="sub">A network of oasis cities, multilingual documents, migrations, faiths, and material objects — not a single highway, but a living web of connections across Eurasia.</p>
+  <p class="source-sub">This project traces the Silk Road through its primary sources: contracts, court records, wooden tablets, coins, and cave paintings left behind in the sands of Central Asia.</p>
+  <svg class="compass" viewBox="0 0 56 56" aria-hidden="true">
+    <circle cx="28" cy="28" r="26" fill="none" stroke="#2C1A0E" stroke-width="1"/>
+    <path d="M28 6 L32 28 L28 50 L24 28 Z" fill="#3D1F00"/>
+    <path d="M6 28 L28 24 L50 28 L28 32 Z" fill="#2C1A0E" opacity="0.5"/>
+    <text x="28" y="13" text-anchor="middle" font-family="Source Sans Pro" font-size="6" fill="#2C1A0E">N</text>
+  </svg>
+</header>
+
+<div class="layout">
+  <div class="map-panel">
+    <div id="map"></div>
+    <div id="religion-overlay" aria-label="Religion spread overlay"></div>
+    <div id="timeline" aria-label="Dynasty timeline"></div>
+    <div id="commodity-explorer" aria-label="Commodity explorer"></div>
+  </div>
+
+  <div class="log">
+    <div class="log-header">
+      <div class="leg-label" id="leg-label">Leg 1 of 9</div>
+      <div class="leg-distance" id="leg-distance">—</div>
+    </div>
+    <div class="stops" id="stops"></div>
+    <div class="controls">
+      <button class="ctrl" id="btn-play">Pause</button>
+      <button class="ctrl" id="btn-restart">Restart Journey</button>
+      <div class="language-control" id="language-control">
+        <button class="ctrl" id="btn-languages" type="button" aria-pressed="false">Languages ◎</button>
+        <div class="language-legend" id="language-legend"><span class="iranian-language">★</span> Iranian-family language</div>
+      </div>
+      <div class="faith-control" id="faith-control">
+        <button class="ctrl" id="btn-faiths" type="button" aria-pressed="false">Faiths ◉</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="documents-section" id="documents">
+  <div class="documents-inner">
+    <h2 class="documents-title">Documents</h2>
+    <p class="documents-subheading">The Silk Road is visible because people wrote things down — on paper, wood, leather, and silk. These are some of those records.</p>
+    <div class="documents-list" id="documents-list"></div>
+  </div>
+</section>
+<section class="iranian-worlds-section" id="iranian-worlds">
+  <div class="iranian-worlds-inner">
+    <h2 class="iranian-worlds-title">Iranian Worlds</h2>
+    <p class="iranian-worlds-subheading">The Silk Road was not a Chinese or a Western story. Its primary agents of connection were Iranian peoples — whose languages, faiths, and commercial networks held Eurasia together for centuries.</p>
+    <div class="iranian-worlds-grid" id="iranian-worlds-grid"></div>
+  </div>
+</section>
+<section class="objects-section" id="objects">
+  <div class="objects-inner">
+    <h2 class="objects-title">Objects</h2>
+    <p class="objects-subheading">The Silk Road is visible through what it left behind — not only luxury goods, but the documents, coins, and everyday objects of oasis life.</p>
+    <div class="objects-grid" id="objects-grid"></div>
+  </div>
+</section>
+<section class="cities-section" id="cities">
+  <div class="cities-inner">
+    <h2 class="cities-title">Cities of the Oasis Network</h2>
+    <p class="cities-subheading">The Silk Road was made of places — oasis towns where caravans stopped, documents were written, and cultures met. These are the nine cities at the heart of this project.</p>
+    <div class="cities-grid" id="cities-grid"></div>
+  </div>
+</section>
+<section id="method"></section>
+
+<div id="city-panel" aria-hidden="true">
+  <button class="city-panel-close" type="button" aria-label="Close city panel">&times;</button>
+  <div id="city-panel-content"></div>
+</div>
+
+<script src="silk-road-data.js"></script>
+<script>
+  const DOCUMENTS = [
+    {
+      title: "Merchant Testimony, Turfan",
+      date: "c. 670 CE",
+      location: "Turfan, Tarim Basin",
+      language: "Chinese (court record)",
+      material: "Recycled paper",
+      description: "A merchant's deposition before a Tang Chinese court, seeking recovery of 275 bolts of silk. The document survives because it was written on paper that had already been used — the recycled surfaces of Turfan's bureaucracy preserved centuries of commercial life.",
+      goods: "275 bolts of silk",
+      iranianSignificance: "The merchant was a Sogdian Iranian operating under Chinese legal jurisdiction — direct evidence of Iranian commercial networks reaching into the heart of Tang China."
+    },
+    {
+      title: "Sogdian Merchants' Letters",
+      date: "c. 313–314 CE",
+      location: "Found near Dunhuang; written across Central Asia",
+      language: "Sogdian (Eastern Iranian)",
+      material: "Paper",
+      description: "A bundle of letters written by Sogdian merchants to families and business partners, reporting on trade conditions, political upheaval in China, and personal news. They document a commercial network stretching from Dunhuang to Samarkand.",
+      goods: "Musk, pepper, silk, silver",
+      iranianSignificance: "The oldest known Sogdian commercial correspondence. Direct evidence that Sogdian-speaking Iranians were the primary organisers of long-distance Silk Road trade at this date."
+    }
+  ];
+  const OBJECTS = [
+    {
+      icon: "📜",
+      title: "Paper",
+      text: "The transfer of papermaking from China to the Islamic world was among the most consequential transmissions of the entire network. Paper enabled the contracts, court records, and religious texts that make Silk Road history visible at all. Without recycled paper, most of what we know from Turfan and Dunhuang would not have survived."
+    },
+    {
+      icon: "🧵",
+      title: "Silk",
+      text: "Silk functioned as both luxury commodity and currency. During the Tang dynasty it circulated alongside grain and coin as an accepted medium of payment, woven into taxation and diplomacy as much as trade. Bolts of silk appear in contracts, dowry lists, and diplomatic gifts across the network."
+    },
+    {
+      icon: "🪵",
+      title: "Wooden Tablets",
+      text: "Contracts, court summons, travel permits, and inventories were written on wooden slats at Niya, Loulan, and Kucha. They preserve not grand political history but the texture of daily life — disputes over camels, records of debts, orders for supplies. The dry desert air preserved what papyrus could not."
+    },
+    {
+      icon: "🪙",
+      title: "Coins",
+      text: "Sasanian, Byzantine, Chinese, and locally minted coins all circulated in the oasis cities simultaneously. The mix of coin types at a single site reveals overlapping networks that no single empire controlled. Coin finds are among the most direct evidence of where merchants actually travelled."
+    },
+    {
+      icon: "🖼️",
+      title: "Cave Paintings",
+      text: "The cave complexes at Kizil (Kucha) and Mogao (Dunhuang) preserve Buddhist narratives, donor portraits, and multilingual inscriptions across many centuries. They document the movement of artistic styles and iconographic programmes across linguistic and political boundaries. Iranian donors appear at both sites."
+    },
+    {
+      icon: "🍞",
+      title: "Dried Foods",
+      text: "Excavations at Turfan have recovered dried dumplings, bread, and fruit preserved by the desert climate. These objects remind us that Silk Road history was not only luxury trade — it was provisioning, food storage, and the daily life of oasis communities. They also show which crops and culinary traditions had already moved along the network."
+    }
+  ];
+  const IRANIAN_WORLDS = [
+    {
+      name: "The Sogdians",
+      homeland: "Sogdia — modern Uzbekistan and Tajikistan",
+      language: "Sogdian, an Eastern Iranian language; the commercial lingua franca of the Silk Road from the 4th to 9th centuries CE",
+      role: "Long-distance merchants, letter-writers, colony-founders. Sogdian merchant communities stretched from Merv to Chang'an, forming the backbone of overland Eurasian trade.",
+      sites: ["Samarkand", "Panjikent", "Dunhuang", "Turfan", "Chang'an"],
+      legacy: "Sogdian script became the ancestor of Uyghur, Mongolian, and Manchu scripts — one of the most consequential alphabetic transmissions in Asian history."
+    },
+    {
+      name: "The Khotanese",
+      homeland: "Khotan — modern Xinjiang, China",
+      language: "Khotanese, a Saka Iranian language with extensive Sanskrit Buddhist vocabulary",
+      role: "Mediators between Indian Buddhist culture and East Asia; manuscript translators and scribes; jade producers whose trade predates the Silk Road name itself.",
+      sites: ["Khotan", "Niya", "Dunhuang"],
+      legacy: "Khotanese manuscripts preserve unique Buddhist texts no longer extant in Sanskrit or Chinese."
+    },
+    {
+      name: "The Parthians",
+      homeland: "Khorasan — northeastern Iran and modern Turkmenistan",
+      language: "Parthian, a Western Iranian language",
+      role: "Built the first great overland empire linking Rome and China; controlled Mesopotamia and the Iranian plateau for nearly five centuries; first to formalise east-west diplomatic and commercial exchange.",
+      sites: ["Ctesiphon", "Nisa", "Merv", "Hecatompylos"],
+      legacy: "Parthian-era infrastructure — roads, way-stations, diplomatic protocols — was the foundation on which the Sasanians and later Islamic caliphates built."
+    },
+    {
+      name: "The Sasanians",
+      homeland: "Fars, Iran — empire spanning Mesopotamia to Bactria",
+      language: "Middle Persian (Pahlavi)",
+      role: "Organised overland and maritime trade; minted the silver drachm that became the default currency across Central Asia; transmitted Zoroastrian cosmology, monumental art, and administrative practice across Eurasia.",
+      sites: ["Ctesiphon", "Merv", "Nishapur", "Bishapur"],
+      legacy: "Sasanian silverware, textiles, and rock reliefs influenced artistic production from the Byzantine world to Tang China — the most widely distributed prestige art style of late antiquity."
+    }
+  ];
+  const CITY_CARDS = [
+    {
+      name: "Xi'an / Chang'an",
+      languageKey: "Xi'an",
+      active: "2nd c. BCE – 10th c. CE",
+      description: "Tang dynasty capital and eastern terminus of the overland routes. Home to documented Sogdian, Persian, and Central Asian merchant communities. A Nestorian Christian church is recorded here in 781 CE on the famous Nestorian Stele."
+    },
+    {
+      name: "Dunhuang",
+      languageKey: "Dunhuang",
+      active: "2nd c. BCE – 11th c. CE",
+      description: "Gateway oasis to the Tarim Basin. Site of the Mogao cave complex — 492 painted caves spanning six centuries. A sealed library cave (Cave 17) preserved over 40,000 manuscripts in Chinese, Tibetan, Sogdian, Khotanese, Sanskrit, and Uyghur."
+    },
+    {
+      name: "Turfan",
+      languageKey: "Turfan",
+      active: "2nd c. BCE – 14th c. CE",
+      description: "Oasis on the Silk Road's northern route. Exceptionally arid climate preserved wooden tablets, paper documents, textiles, and food. Home to Manichaean, Buddhist, and later Muslim communities in successive centuries."
+    },
+    {
+      name: "Kucha",
+      languageKey: "Kucha",
+      active: "1st – 9th c. CE",
+      description: "Important Buddhist kingdom on the northern Tarim route. Source of Tocharian (Kuchean) language manuscripts. The Kizil cave complex shows strong Iranian artistic influence. Birthplace of the great Buddhist translator Kumarajiva (344–413 CE)."
+    },
+    {
+      name: "Khotan",
+      languageKey: "Khotan",
+      active: "2nd c. BCE – 11th c. CE",
+      description: "Southernmost major oasis. Iranian-speaking (Khotanese) Buddhist kingdom; a primary source of jade traded west. The last Buddhist kingdom on the Silk Road — converted to Islam after 1006 CE."
+    },
+    {
+      name: "Samarkand",
+      languageKey: "Samarkand",
+      active: "5th c. BCE – present",
+      description: "Heart of ancient Sogdia and one of the great cities of the ancient world. The Afrasiyab palace paintings (c. 650 CE) show ambassadors from across Eurasia arriving at the Sogdian king's court — the most vivid document of Silk Road diplomacy that survives."
+    },
+    {
+      name: "Merv",
+      languageKey: "Merv",
+      active: "6th c. BCE – 13th c. CE",
+      description: "Called \"Queen of the World\" by medieval geographers. A Sasanian, then Islamic metropolis on the Murghab river (modern Turkmenistan). One of the largest cities in the medieval world; a major centre of Nestorian Christianity and later Islamic scholarship."
+    },
+    {
+      name: "Baghdad / Ctesiphon",
+      languageKey: "Baghdad",
+      active: "3rd c. CE – 13th c. CE",
+      description: "Sasanian imperial capital (Ctesiphon), then Abbasid capital (Baghdad). The political and cultural heart of the Iranian world for a millennium. Site of the great translation movement that transmitted Greek, Persian, and Indian learning into Arabic."
+    },
+    {
+      name: "Constantinople",
+      languageKey: "Constantinople",
+      active: "4th – 15th c. CE",
+      description: "Byzantine capital and western anchor of the network. A silk-weaving centre after silkworm cultivation reached the Mediterranean in the 6th century CE. The point where Silk Road goods entered the Mediterranean economy."
+    }
+  ];
+
+  function renderDocuments() {
+    const documentsList = document.getElementById('documents-list');
+    if (!documentsList) return;
+
+    const cards = DOCUMENTS.map((documentItem) => {
+      const card = document.createElement('article');
+      card.className = 'document-card';
+
+      const title = document.createElement('h3');
+      title.className = 'document-title';
+      title.textContent = documentItem.title;
+
+      const meta = document.createElement('p');
+      meta.className = 'document-meta';
+      meta.textContent = [
+        documentItem.date,
+        documentItem.location,
+        documentItem.language,
+        documentItem.material
+      ].join(' · ');
+
+      const description = document.createElement('p');
+      description.className = 'document-description';
+      description.textContent = documentItem.description;
+
+      const goods = document.createElement('p');
+      goods.className = 'document-detail';
+      const goodsLabel = document.createElement('strong');
+      goodsLabel.textContent = 'Goods mentioned: ';
+      goods.append(goodsLabel, documentItem.goods);
+
+      const significance = document.createElement('p');
+      significance.className = 'document-detail significance';
+      const significanceLabel = document.createElement('strong');
+      significanceLabel.textContent = 'Iranian significance: ';
+      significance.append(significanceLabel, documentItem.iranianSignificance);
+
+      card.append(title, meta, description, goods, significance);
+      return card;
+    });
+
+    documentsList.replaceChildren(...cards);
+  }
+
+  renderDocuments();
+
+  function renderIranianWorlds() {
+    const iranianWorldsGrid = document.getElementById('iranian-worlds-grid');
+    if (!iranianWorldsGrid) return;
+
+    const cards = IRANIAN_WORLDS.map((profile) => {
+      const card = document.createElement('article');
+      card.className = 'iranian-profile-card';
+
+      const name = document.createElement('h3');
+      name.className = 'iranian-profile-name';
+      name.textContent = profile.name;
+
+      const homeland = document.createElement('p');
+      homeland.className = 'iranian-profile-detail';
+      const homelandLabel = document.createElement('strong');
+      homelandLabel.textContent = 'Homeland: ';
+      homeland.append(homelandLabel, profile.homeland);
+
+      const language = document.createElement('p');
+      language.className = 'iranian-profile-detail';
+      const languageLabel = document.createElement('strong');
+      languageLabel.textContent = 'Language: ';
+      language.append(languageLabel, profile.language);
+
+      const role = document.createElement('p');
+      role.className = 'iranian-profile-detail';
+      const roleLabel = document.createElement('strong');
+      roleLabel.textContent = 'Role on the Silk Road: ';
+      role.append(roleLabel, profile.role);
+
+      const siteIntro = document.createElement('p');
+      siteIntro.className = 'iranian-profile-detail';
+      const siteLabel = document.createElement('strong');
+      siteLabel.textContent = 'Key sites:';
+      siteIntro.append(siteLabel);
+
+      const sites = document.createElement('div');
+      sites.className = 'site-chip-list';
+      profile.sites.forEach((site) => {
+        const chip = document.createElement('span');
+        chip.className = 'site-chip';
+        chip.textContent = site;
+        sites.appendChild(chip);
+      });
+
+      const legacy = document.createElement('p');
+      legacy.className = 'iranian-profile-legacy';
+      legacy.textContent = profile.legacy;
+
+      card.append(name, homeland, language, role, siteIntro, sites, legacy);
+      return card;
+    });
+
+    iranianWorldsGrid.replaceChildren(...cards);
+  }
+
+  renderIranianWorlds();
+
+  function renderObjects() {
+    const objectsGrid = document.getElementById('objects-grid');
+    if (!objectsGrid) return;
+
+    const cards = OBJECTS.map((objectItem) => {
+      const card = document.createElement('article');
+      card.className = 'object-card';
+
+      const icon = document.createElement('span');
+      icon.className = 'object-icon';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.textContent = objectItem.icon;
+
+      const title = document.createElement('h3');
+      title.className = 'object-title';
+      title.textContent = objectItem.title;
+
+      const text = document.createElement('p');
+      text.className = 'object-text';
+      text.textContent = objectItem.text;
+
+      card.append(icon, title, text);
+      return card;
+    });
+
+    objectsGrid.replaceChildren(...cards);
+  }
+
+  renderObjects();
+
+  const data = window.SILK_ROAD_DATA.CITIES;
+
+  // ---------- map setup ----------
+  const map = L.map('map', { scrollWheelZoom: true }).setView(data[0].coords, 5);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+    subdomains: 'abcd',
+    maxZoom: 18
+  }).addTo(map);
+
+  const caravanIcon = L.divIcon({
+    className: 'caravan-marker',
+    html: `<svg width="34" height="34" viewBox="0 0 34 34" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="17" cy="17" r="15" fill="#F5EDD8" stroke="#3D1F00" stroke-width="2.5"/>
+      <text x="17" y="23" text-anchor="middle" font-size="15">🐫</text>
+    </svg>`,
+    iconSize: [34, 34],
+    iconAnchor: [17, 17],
+    popupAnchor: [0, -16]
+  });
+
+  const visitedIcon = (i) => L.divIcon({
+    className: 'caravan-marker',
+    html: `<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="10" cy="10" r="7" fill="#1F5C4F" stroke="#F5EDD8" stroke-width="2"/>
+    </svg>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
+  });
+
+  const routeCoords = data.map(d => d.coords);
+  const fullRoute = L.polyline(routeCoords, { color: '#3D1F00', weight: 1, opacity: 0.25, dashArray: '4 6' }).addTo(map);
+  const travelledRoute = L.polyline([], { color: '#3D1F00', weight: 2.5 }).addTo(map);
+  const cityMarkersById = new Map();
+  const CITY_LANGUAGES = {
+    "Xi'an": ["Chinese", "Sogdian ★", "Persian ★"],
+    "Dunhuang": ["Chinese", "Tibetan", "Khotanese ★", "Sogdian ★", "Uyghur"],
+    "Turfan": ["Chinese", "Sogdian ★", "Uyghur"],
+    "Kucha": ["Kuchean / Tocharian", "Sanskrit", "Chinese"],
+    "Khotan": ["Khotanese ★", "Sanskrit", "Chinese", "Tibetan"],
+    "Samarkand": ["Sogdian ★", "Arabic", "Chinese"],
+    "Merv": ["Middle Persian ★", "Sogdian ★", "Arabic"],
+    "Baghdad": ["Middle Persian ★", "Arabic", "Syriac"],
+    "Constantinople": ["Greek", "Latin", "Syriac"]
+  };
+  const CITY_FAITHS = {
+    "Xi'an": ["Buddhism", "Zoroastrianism", "Nestorian Christianity", "Islam"],
+    "Dunhuang": ["Buddhism", "Manichaeism", "Zoroastrianism"],
+    "Turfan": ["Buddhism", "Manichaeism", "Nestorian Christianity"],
+    "Kucha": ["Buddhism"],
+    "Khotan": ["Buddhism", "Islam"],
+    "Samarkand": ["Zoroastrianism", "Buddhism", "Manichaeism", "Islam"],
+    "Merv": ["Zoroastrianism", "Nestorian Christianity", "Islam"],
+    "Baghdad": ["Zoroastrianism", "Nestorian Christianity", "Islam"],
+    "Constantinople": ["Eastern Christianity"]
+  };
+  const FAITH_COLORS = {
+    "Buddhism": "#E07B39",
+    "Zoroastrianism": "#D4500A",
+    "Manichaeism": "#7B5EA7",
+    "Nestorian Christianity": "#4A7FA5",
+    "Islam": "#2A6B6B",
+    "Eastern Christianity": "#3D5A80"
+  };
+  const FAITH_HOVER_TEXT = "These faiths travelled with merchants, monks, and migrants — not as fixed state religions.";
+  let faithsActive = false;
+  let faithLegendControl = null;
+  let faithHoverTooltip = null;
+
+  function cityLanguageKey(cityName) {
+    return cityName
+      .replace(/\s*\([^)]*\)/g, '')
+      .split('/')[0]
+      .trim();
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (character) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[character]));
+  }
+
+  function renderCities() {
+    const citiesGrid = document.getElementById('cities-grid');
+    if (!citiesGrid) return;
+
+    const cards = CITY_CARDS.map((city) => {
+      const card = document.createElement('article');
+      card.className = 'city-card';
+
+      const title = document.createElement('h3');
+      title.className = 'city-card-title';
+      title.textContent = city.name;
+
+      const active = document.createElement('p');
+      active.className = 'city-card-active';
+      active.textContent = 'Active: ' + city.active;
+
+      const description = document.createElement('p');
+      description.className = 'city-card-description';
+      description.textContent = city.description;
+
+      const chips = document.createElement('div');
+      chips.className = 'city-language-chips';
+      (CITY_LANGUAGES[city.languageKey] || []).forEach((language) => {
+        const chip = document.createElement('span');
+        chip.className = 'city-language-chip' + (language.includes('★') ? ' iranian' : '');
+        chip.textContent = language;
+        chips.appendChild(chip);
+      });
+
+      card.append(title, active, description, chips);
+      return card;
+    });
+
+    citiesGrid.replaceChildren(...cards);
+  }
+
+  renderCities();
+
+  function cityOverlayContent(city) {
+    const languages = CITY_LANGUAGES[cityLanguageKey(city.city)];
+    const faiths = CITY_FAITHS[cityLanguageKey(city.city)];
+    const cityLabel = '<span class="city-label">' + escapeHtml(city.city) + '</span>';
+    let content = cityLabel;
+
+    if (faithsActive && faiths) {
+      const faithDots = faiths.map((faith) => {
+        const color = FAITH_COLORS[faith] || '#6B5640';
+        return '<span class="faith-dot" style="background:' + color + '" title="' + escapeHtml(faith) + '"></span>';
+      }).join('');
+      content += '<span class="faith-dot-row" aria-label="Attested faiths">' + faithDots + '</span>';
+    }
+
+    if (languageTagsActive && languages) {
+      const languageTags = languages.map((language) => {
+        const className = language.includes('★') ? 'iranian-language' : 'non-iranian-language';
+        return '<span class="' + className + '">' + escapeHtml(language) + '</span>';
+      }).join(', ');
+      content += '<span class="language-tag">' + languageTags + '</span>';
+    }
+
+    return content;
+  }
+
+  function refreshCityOverlays() {
+    const overlaysActive = languageTagsActive || faithsActive;
+    data.forEach((city) => {
+      const marker = cityMarkersById.get(city.id);
+      if (!marker) return;
+
+      marker.unbindTooltip();
+      if (overlaysActive) {
+        marker.bindTooltip(cityOverlayContent(city), {
+          className: 'language-tooltip',
+          direction: 'top',
+          opacity: 0.95,
+          permanent: true
+        });
+      } else {
+        marker.bindTooltip(city.city, { direction: 'top', opacity: 0.9 });
+      }
+    });
+  }
+
+  function createFaithLegendControl() {
+    const control = L.control({ position: 'bottomleft' });
+    control.onAdd = () => {
+      const legend = L.DomUtil.create('div', 'faith-map-legend');
+      const title = document.createElement('div');
+      title.className = 'faith-map-legend-title';
+      title.textContent = 'Faiths';
+      legend.appendChild(title);
+
+      Object.entries(FAITH_COLORS).forEach(([faith, color]) => {
+        const item = document.createElement('div');
+        item.className = 'faith-map-legend-item';
+
+        const dot = document.createElement('span');
+        dot.className = 'faith-legend-dot';
+        dot.style.background = color;
+
+        const label = document.createElement('span');
+        label.textContent = faith;
+
+        item.append(dot, label);
+        legend.appendChild(item);
+      });
+
+      L.DomEvent.disableClickPropagation(legend);
+      return legend;
+    };
+    return control;
+  }
+
+  function showFaithLegend() {
+    if (!faithLegendControl) faithLegendControl = createFaithLegendControl();
+    faithLegendControl.addTo(map);
+  }
+
+  function hideFaithLegend() {
+    if (faithLegendControl) faithLegendControl.remove();
+  }
+
+  function showFaithHoverTooltip(latlng) {
+    if (!faithsActive) return;
+    if (faithHoverTooltip) map.removeLayer(faithHoverTooltip);
+    faithHoverTooltip = L.tooltip({
+      className: 'faith-hover-tooltip',
+      direction: 'right',
+      opacity: 0.96,
+      permanent: false
+    })
+      .setLatLng(latlng)
+      .setContent(FAITH_HOVER_TEXT)
+      .addTo(map);
+  }
+
+  function hideFaithHoverTooltip() {
+    if (!faithHoverTooltip) return;
+    map.removeLayer(faithHoverTooltip);
+    faithHoverTooltip = null;
+  }
+
+  data.forEach((d) => {
+    const marker = L.circleMarker(d.coords, {
+      radius: 5,
+      color: '#2C1A0E',
+      weight: 1.4,
+      fillColor: '#F5EDD8',
+      fillOpacity: 0.92,
+      opacity: 0.9
+    }).addTo(map);
+
+    const markerElement = marker.getElement();
+    if (markerElement) markerElement.dataset.cityId = d.id;
+
+    marker.bindTooltip(d.city, { direction: 'top', opacity: 0.9 });
+    marker.on('click', () => openCityPanel(d.id));
+    marker.on('mouseover', (event) => showFaithHoverTooltip(event.latlng));
+    marker.on('mouseout', hideFaithHoverTooltip);
+    cityMarkersById.set(d.id, marker);
+  });
+
+  let caravanMarker = null;
+  const visitedMarkers = [];
+
+  // ---------- distance calc (haversine, km) ----------
+  function haversine(a, b) {
+    const R = 6371;
+    const dLat = (b[0]-a[0]) * Math.PI/180;
+    const dLon = (b[1]-a[1]) * Math.PI/180;
+    const lat1 = a[0] * Math.PI/180, lat2 = b[0] * Math.PI/180;
+    const h = Math.sin(dLat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;
+    return Math.round(2 * R * Math.asin(Math.sqrt(h)));
+  }
+
+  // ---------- build sidebar ----------
+  const stopsEl = document.getElementById('stops');
+  data.forEach((d, i) => {
+    const el = document.createElement('div');
+    el.className = 'stop';
+    el.id = `stop-${i}`;
+    el.dataset.cityId = d.id;
+    el.innerHTML = `
+      <div class="stop-index">STOP ${String(i+1).padStart(2,'0')} / ${String(data.length).padStart(2,'0')}</div>
+      <div class="stop-name">${d.city}</div>
+      <div class="stop-region">${d.region}</div>
+      <p class="stop-desc">${d.desc}</p>
+      <div class="stop-trade">${d.trade}</div>
+    `;
+    el.addEventListener('click', () => {
+      jumpTo(i);
+      openCityPanel(d.id);
+    });
+    stopsEl.appendChild(el);
+  });
+
+  const legLabel = document.getElementById('leg-label');
+  const legDistance = document.getElementById('leg-distance');
+  const btnPlay = document.getElementById('btn-play');
+  const btnRestart = document.getElementById('btn-restart');
+  const btnLanguages = document.getElementById('btn-languages');
+  const languageControl = document.getElementById('language-control');
+  const btnFaiths = document.getElementById('btn-faiths');
+  const faithControl = document.getElementById('faith-control');
+  let languageTagsActive = false;
+
+  btnLanguages.addEventListener('click', () => {
+    languageTagsActive = !languageTagsActive;
+    btnLanguages.setAttribute('aria-pressed', String(languageTagsActive));
+    languageControl.classList.toggle('is-active', languageTagsActive);
+    refreshCityOverlays();
+  });
+
+  btnFaiths.addEventListener('click', () => {
+    faithsActive = !faithsActive;
+    btnFaiths.setAttribute('aria-pressed', String(faithsActive));
+    faithControl.classList.toggle('is-active', faithsActive);
+    if (faithsActive) {
+      showFaithLegend();
+    } else {
+      hideFaithLegend();
+      hideFaithHoverTooltip();
+    }
+    refreshCityOverlays();
+  });
+
+  let index = 0;
+  let playing = true;
+  let timer = null;
+
+  function renderStep(i) {
+    const point = data[i];
+
+    document.querySelectorAll('.stop').forEach(s => s.classList.remove('active'));
+    const activeEl = document.getElementById(`stop-${i}`);
+    activeEl.classList.add('active');
+    activeEl.classList.add('visited');
+    activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    legLabel.textContent = `Leg ${i+1} of ${data.length} — ${point.city}`;
+    if (i > 0) {
+      const dist = haversine(data[i-1].coords, point.coords);
+      legDistance.textContent = `${dist.toLocaleString()} km from ${data[i-1].city}`;
+    } else {
+      legDistance.textContent = 'Journey begins';
+    }
+
+    if (caravanMarker) {
+      visitedMarkers.push(L.marker(caravanMarker.getLatLng(), { icon: visitedIcon(i) }).addTo(map));
+      map.removeLayer(caravanMarker);
+    }
+    caravanMarker = L.marker(point.coords, { icon: caravanIcon }).addTo(map)
+      .bindPopup(`<div class="popup-city">${point.city}</div><div class="popup-meta">${point.region}</div>`)
+      .openPopup();
+    caravanMarker.on('click', () => openCityPanel(point.id));
+
+    travelledRoute.addLatLng(point.coords);
+    map.flyTo(point.coords, 5, { duration: 1.1 });
+  }
+
+  function advance() {
+    if (index >= data.length) return;
+    renderStep(index);
+    index++;
+    if (index < data.length && playing) {
+      timer = setTimeout(advance, 3200);
+    }
+  }
+
+  function jumpTo(i) {
+    clearTimeout(timer);
+    visitedMarkers.forEach(m => map.removeLayer(m));
+    visitedMarkers.length = 0;
+    if (caravanMarker) map.removeLayer(caravanMarker);
+    travelledRoute.setLatLngs(data.slice(0, i+1).map(d => d.coords));
+    for (let k = 0; k < i; k++) {
+      visitedMarkers.push(L.marker(data[k].coords, { icon: visitedIcon(k) }).addTo(map));
+    }
+    index = i;
+    renderStep(index);
+    index++;
+    playing = true;
+    btnPlay.textContent = 'Pause';
+    if (index < data.length) timer = setTimeout(advance, 3200);
+  }
+
+  btnPlay.addEventListener('click', () => {
+    playing = !playing;
+    btnPlay.textContent = playing ? 'Pause' : 'Resume';
+    if (playing && index < data.length) {
+      timer = setTimeout(advance, 600);
+    } else {
+      clearTimeout(timer);
+    }
+  });
+
+  btnRestart.addEventListener('click', () => {
+    clearTimeout(timer);
+    visitedMarkers.forEach(m => map.removeLayer(m));
+    visitedMarkers.length = 0;
+    if (caravanMarker) map.removeLayer(caravanMarker);
+    travelledRoute.setLatLngs([]);
+    document.querySelectorAll('.stop').forEach(s => { s.classList.remove('active'); s.classList.remove('visited'); });
+    index = 0;
+    playing = true;
+    btnPlay.textContent = 'Pause';
+    advance();
+  });
+
+  advance();
+</script>
+<script>
+  const religionOverlayLayers = new Map();
+  const activeReligionIds = new Set();
+
+  function toggleReligionSpread(religion) {
+    if (activeReligionIds.has(religion.id)) {
+      map.removeLayer(religionOverlayLayers.get(religion.id));
+      religionOverlayLayers.delete(religion.id);
+      activeReligionIds.delete(religion.id);
+    } else {
+      const cities = religion.cities
+        .map((cityId) => window.SILK_ROAD_DATA.CITIES.find((city) => city.id === cityId))
+        .filter(Boolean);
+      const layerGroup = L.layerGroup().addTo(map);
+
+      cities.forEach((city) => {
+        L.circleMarker(city.coords, {
+          color: religion.color,
+          fill: false,
+          interactive: false,
+          opacity: 0.5,
+          radius: 12,
+          weight: 3
+        }).addTo(layerGroup);
+      });
+
+      if (cities.length > 1) {
+        L.polyline(cities.map((city) => city.coords), {
+          color: religion.color,
+          dashArray: '6 6',
+          interactive: false,
+          opacity: 0.82,
+          weight: 2
+        }).addTo(layerGroup);
+      }
+
+      religionOverlayLayers.set(religion.id, layerGroup);
+      activeReligionIds.add(religion.id);
+    }
+
+    renderReligionSpreadOverlay();
+  }
+
+  function renderReligionSpreadOverlay() {
+    const overlay = document.getElementById('religion-overlay');
+    if (!overlay) return;
+
+    const religions = window.SILK_ROAD_DATA.RELIGIONS;
+    const toggles = document.createElement('div');
+    toggles.className = 'religion-toggles';
+
+    religions.forEach((religion) => {
+      const button = document.createElement('button');
+      const isActive = activeReligionIds.has(religion.id);
+      button.className = 'religion-toggle';
+      button.type = 'button';
+      button.style.setProperty('--religion-color', religion.color);
+      button.setAttribute('aria-pressed', String(isActive));
+      button.textContent = religion.symbol + ' ' + religion.name;
+      button.addEventListener('click', () => toggleReligionSpread(religion));
+      toggles.appendChild(button);
+    });
+
+    const notePanel = document.createElement('div');
+    notePanel.className = 'religion-spread-panel';
+    religions.filter((religion) => activeReligionIds.has(religion.id)).forEach((religion) => {
+      const name = document.createElement('div');
+      name.className = 'religion-spread-name';
+      name.textContent = religion.symbol + ' ' + religion.name;
+
+      const note = document.createElement('p');
+      note.textContent = religion.spreadNote;
+      notePanel.append(name, note);
+    });
+
+    const caption = document.createElement('p');
+    caption.className = 'religion-caption';
+    caption.textContent = window.SILK_ROAD_DATA.RELIGION_OVERLAY_CAPTION;
+
+    overlay.replaceChildren(toggles, notePanel, caption);
+  }
+
+  renderReligionSpreadOverlay();
+</script>
+<script>
+  let activeCommodityRoute = null;
+
+  function showCommodityRoute(commodity) {
+    if (activeCommodityRoute) map.removeLayer(activeCommodityRoute);
+
+    const cities = commodity.cities
+      .map((cityId) => window.SILK_ROAD_DATA.CITIES.find((city) => city.id === cityId))
+      .filter(Boolean);
+
+    activeCommodityRoute = L.polyline(cities.map((city) => city.coords), {
+      className: 'commodity-route',
+      color: commodity.color,
+      dashArray: '4 10',
+      lineCap: 'round',
+      opacity: 0.95,
+      weight: 3
+    }).addTo(map);
+
+    const routeElement = activeCommodityRoute.getElement();
+    if (routeElement) routeElement.classList.add('commodity-route');
+
+    renderCommodityExplorer(commodity.id);
+  }
+
+  function clearCommodityRoute() {
+    if (activeCommodityRoute) {
+      map.removeLayer(activeCommodityRoute);
+      activeCommodityRoute = null;
+    }
+    renderCommodityExplorer();
+  }
+
+  function renderCommodityExplorer(activeCommodityId) {
+    const explorer = document.getElementById('commodity-explorer');
+    if (!explorer) return;
+
+    const commodities = window.SILK_ROAD_DATA.COMMODITIES;
+    const grid = document.createElement('div');
+    grid.className = 'commodity-grid';
+
+    commodities.forEach((commodity) => {
+      const card = document.createElement('button');
+      const isActive = commodity.id === activeCommodityId;
+      card.className = 'commodity-card' + (isActive ? ' commodity-active' : '');
+      card.type = 'button';
+      card.style.setProperty('--commodity-color', commodity.color);
+      card.setAttribute('aria-pressed', String(isActive));
+
+      const emoji = document.createElement('span');
+      emoji.className = 'commodity-emoji';
+      emoji.textContent = commodity.emoji;
+
+      const name = document.createElement('span');
+      name.className = 'commodity-name';
+      name.textContent = commodity.name;
+
+      const direction = document.createElement('span');
+      direction.className = 'commodity-direction';
+      direction.textContent = commodity.direction;
+
+      const summary = document.createElement('span');
+      summary.className = 'commodity-summary';
+      summary.textContent = commodity.shortDescription;
+
+      card.append(emoji, name, direction, summary);
+      card.addEventListener('click', () => showCommodityRoute(commodity));
+      grid.appendChild(card);
+    });
+
+    const detail = document.createElement('div');
+    detail.className = 'commodity-detail';
+    if (activeCommodityId) {
+      const commodity = commodities.find((item) => item.id === activeCommodityId);
+      if (commodity) {
+        detail.style.setProperty('--commodity-color', commodity.color);
+
+        const heading = document.createElement('h3');
+        heading.textContent = commodity.emoji + ' ' + commodity.name + ' / ' + commodity.direction;
+
+        const description = document.createElement('p');
+        description.textContent = commodity.description;
+
+        const note = document.createElement('blockquote');
+        note.textContent = commodity.scholarNote;
+
+        const clearButton = document.createElement('button');
+        clearButton.className = 'commodity-clear';
+        clearButton.type = 'button';
+        clearButton.textContent = 'Clear route';
+        clearButton.addEventListener('click', clearCommodityRoute);
+
+        detail.append(heading, description, note, clearButton);
+      }
+    }
+
+    explorer.replaceChildren(grid, detail);
+  }
+
+  renderCommodityExplorer();
+</script>
+<script>
+  function filterMapByDynasty(dynastyId) {
+    const silkRoadData = window.SILK_ROAD_DATA;
+    const dynasty = silkRoadData.DYNASTIES.find((item) => item.id === dynastyId);
+    if (!dynasty) return;
+
+    const matchingCities = silkRoadData.CITIES.filter((city) => {
+      const dynastyControl = city.dynastyControl || city.dynastyIds || [];
+      return dynastyControl.includes(dynastyId);
+    });
+    const matchingCityIds = new Set(matchingCities.map((city) => city.id));
+
+    applySvgDynastyFilter(matchingCityIds, dynasty);
+    cityMarkersById.forEach((marker, cityId) => {
+      const isMatch = matchingCityIds.has(cityId);
+      marker.setStyle({
+        color: isMatch ? dynasty.color : '#2C1A0E',
+        fillColor: isMatch ? dynasty.color : '#F5EDD8',
+        fillOpacity: isMatch ? 0.92 : 0.2,
+        opacity: isMatch ? 1 : 0.2
+      });
+      marker.setRadius(isMatch ? 6 : 5);
+    });
+
+    const routeIsRelevant = matchingCities.length >= 2;
+    fullRoute.setStyle({
+      color: dynasty.color,
+      opacity: routeIsRelevant ? 0.55 : 0.1
+    });
+
+    console.log(dynastyId);
+  }
+
+  function applySvgDynastyFilter(matchingCityIds, dynasty) {
+    const svgCityMarkers = document.querySelectorAll('svg [data-city-id], svg [data-city], svg [id]');
+    svgCityMarkers.forEach((marker) => {
+      const cityId = marker.dataset.cityId || marker.dataset.city || marker.id;
+      if (!window.SILK_ROAD_DATA.CITIES.some((city) => city.id === cityId)) return;
+
+      const isMatch = matchingCityIds.has(cityId);
+      marker.style.opacity = isMatch ? '1' : '0.2';
+      marker.style.stroke = isMatch ? dynasty.color : '';
+      marker.style.transformBox = 'fill-box';
+      marker.style.transformOrigin = 'center';
+      marker.style.transform = isMatch ? 'scale(1.2)' : '';
+    });
+
+    const routeLines = document.querySelectorAll('svg [data-route-cities], svg [data-city-ids], svg [data-dynasty-id], svg [data-route], svg .trade-route, svg #trade-route');
+    const selectedCityIds = Array.from(matchingCityIds);
+    routeLines.forEach((route) => {
+      const routeCityIds = (route.dataset.routeCities || route.dataset.cityIds || '').split(/[ ,]+/).filter(Boolean);
+      const routeMatchesDynasty = route.dataset.dynastyId === dynasty.id;
+      const routeMatchesCities = routeCityIds.filter((cityId) => matchingCityIds.has(cityId)).length >= 2;
+      const isRelevant = routeMatchesDynasty || routeMatchesCities || (!routeCityIds.length && selectedCityIds.length >= 2);
+      route.style.opacity = isRelevant ? '1' : '0.2';
+    });
+  }
+
+  function resetDynastyFilter() {
+    document.querySelectorAll('#timeline .timeline-block').forEach((block) => block.classList.remove('dynasty-active'));
+    document.querySelectorAll('svg [data-city-id], svg [data-city], svg [id]').forEach((marker) => {
+      const cityId = marker.dataset.cityId || marker.dataset.city || marker.id;
+      if (!window.SILK_ROAD_DATA.CITIES.some((city) => city.id === cityId)) return;
+      marker.style.opacity = '1';
+      marker.style.stroke = '';
+      marker.style.transform = '';
+    });
+    document.querySelectorAll('svg [data-route-cities], svg [data-city-ids], svg [data-dynasty-id], svg [data-route], svg .trade-route, svg #trade-route').forEach((route) => {
+      route.style.opacity = '1';
+    });
+
+    cityMarkersById.forEach((marker) => {
+      marker.setStyle({
+        color: '#2C1A0E',
+        fillColor: '#F5EDD8',
+        fillOpacity: 0.92,
+        opacity: 0.9
+      });
+      marker.setRadius(5);
+    });
+    fullRoute.setStyle({ color: '#3D1F00', opacity: 0.25 });
+
+    const detail = document.querySelector('#timeline .timeline-detail');
+    if (detail) detail.replaceChildren();
+  }
+
+  function createDynastyTimeline(dynasties) {
+    const timeline = document.getElementById('timeline');
+    if (!timeline) return;
+
+    const timelineStart = -550;
+    const timelineEnd = 999;
+    const timelineSpan = timelineEnd - timelineStart;
+    const boundaryPosition = ((0 - timelineStart) / timelineSpan) * 100;
+
+    timeline.innerHTML = '';
+    const head = document.createElement('div');
+    head.className = 'timeline-head';
+
+    const instruction = document.createElement('div');
+    instruction.className = 'timeline-instruction';
+    instruction.textContent = 'click a dynasty to filter the map';
+
+    const resetButton = document.createElement('button');
+    resetButton.className = 'timeline-reset';
+    resetButton.type = 'button';
+    resetButton.textContent = 'Show all';
+    resetButton.addEventListener('click', () => resetDynastyFilter());
+
+    head.append(instruction, resetButton);
+
+    const track = document.createElement('div');
+    track.className = 'timeline-track';
+
+    const boundary = document.createElement('span');
+    boundary.className = 'timeline-boundary';
+    boundary.style.left = boundaryPosition + '%';
+    track.appendChild(boundary);
+
+    dynasties.forEach((dynasty) => {
+      const block = document.createElement('button');
+      const years = Math.abs(dynasty.end - dynasty.start);
+      const startPosition = ((dynasty.start - timelineStart) / timelineSpan) * 100;
+      const width = (years / timelineSpan) * 100;
+      block.className = 'timeline-block';
+      block.type = 'button';
+      block.dataset.dynasty = dynasty.id;
+      block.style.left = startPosition + '%';
+      block.style.width = width + '%';
+      block.style.background = dynasty.color;
+      block.title = dynasty.thesis;
+      if (dynasty.textColor) block.style.color = dynasty.textColor;
+
+      const name = document.createElement('span');
+      name.className = 'timeline-name';
+      name.textContent = dynasty.name;
+
+      const dates = document.createElement('span');
+      dates.className = 'timeline-dates';
+      dates.textContent = dynasty.dates;
+
+      block.append(name, dates);
+      block.addEventListener('click', () => {
+        timeline.querySelectorAll('.timeline-block').forEach((item) => item.classList.remove('dynasty-active'));
+        block.classList.add('dynasty-active');
+        filterMapByDynasty(dynasty.id);
+        showDynastyDetail(dynasty);
+      });
+
+      track.appendChild(block);
+    });
+
+    const axis = document.createElement('div');
+    axis.className = 'timeline-axis';
+    axis.innerHTML = '<span class="timeline-axis-label start">550 BCE</span><span class="timeline-axis-label boundary">BCE / CE</span><span class="timeline-axis-label end">999 CE</span>';
+    axis.querySelector('.boundary').style.left = boundaryPosition + '%';
+
+    const detail = document.createElement('div');
+    detail.className = 'timeline-detail';
+    detail.setAttribute('aria-live', 'polite');
+
+    timeline.append(head, track, axis, detail);
+  }
+
+  function showDynastyDetail(dynasty) {
+    const detail = document.querySelector('#timeline .timeline-detail');
+    if (!detail) return;
+
+    const heading = document.createElement('h3');
+    heading.textContent = dynasty.name + ' (' + dynasty.dates + ')';
+
+    const thesis = document.createElement('p');
+    thesis.textContent = dynasty.thesis;
+
+    const source = document.createElement('cite');
+    source.textContent = 'Source: ' + dynasty.keySource;
+
+    detail.replaceChildren(heading, thesis, source);
+  }
+
+  createDynastyTimeline(window.SILK_ROAD_DATA.DYNASTIES);
+</script>
+<script>
+  function makeCityPanelSection(labelText, contentNode) {
+    const section = document.createElement('section');
+    section.className = 'city-panel-section';
+
+    const label = document.createElement('div');
+    label.className = 'city-panel-label';
+    label.textContent = labelText;
+
+    section.append(label, contentNode);
+    return section;
+  }
+
+  function openCityPanel(cityId) {
+    const silkRoadData = window.SILK_ROAD_DATA;
+    const city = silkRoadData.CITIES.find((item) => item.id === cityId);
+    const panel = document.getElementById('city-panel');
+    const content = document.getElementById('city-panel-content');
+
+    if (!city || !panel || !content) return;
+
+    const dynasties = city.dynastyIds
+      .map((id) => silkRoadData.DYNASTIES.find((dynasty) => dynasty.id === id))
+      .filter(Boolean);
+    const religions = city.religionIds
+      .map((id) => silkRoadData.RELIGIONS.find((religion) => religion.id === id))
+      .filter(Boolean);
+
+    const heading = document.createElement('h2');
+    heading.textContent = city.name || city.city;
+
+    const meta = document.createElement('div');
+    meta.className = 'city-panel-meta';
+    meta.textContent = [city.modernLocation, city.eraDates].filter(Boolean).join(' / ');
+
+    const bar = document.createElement('div');
+    bar.className = 'dynasty-control-bar';
+    if (dynasties.length) {
+      dynasties.forEach((dynasty) => {
+        const segment = document.createElement('span');
+        segment.className = 'dynasty-control-segment';
+        segment.style.setProperty('--years', Math.abs(dynasty.end - dynasty.start));
+        segment.style.background = dynasty.color;
+        segment.title = dynasty.name;
+        bar.appendChild(segment);
+      });
+    } else {
+      const empty = document.createElement('div');
+      empty.className = 'city-panel-empty';
+      empty.textContent = 'No listed dynasty control in the current dataset.';
+      bar.appendChild(empty);
+    }
+
+    const legend = document.createElement('div');
+    legend.className = 'dynasty-control-legend';
+    dynasties.forEach((dynasty) => {
+      const label = document.createElement('span');
+      label.className = 'dynasty-control-label';
+      label.textContent = dynasty.name;
+      legend.appendChild(label);
+    });
+
+    const dynastyWrap = document.createElement('div');
+    dynastyWrap.append(bar, legend);
+
+    const summary = document.createElement('p');
+    summary.className = 'city-panel-summary';
+    summary.textContent = city.scholarSummary;
+
+    const quote = document.createElement('blockquote');
+    quote.className = 'city-panel-quote';
+    quote.textContent = city.keyFact;
+
+    const badges = document.createElement('div');
+    badges.className = 'religion-badges';
+    religions.forEach((religion) => {
+      const badge = document.createElement('span');
+      badge.className = 'religion-badge';
+      badge.style.background = religion.color;
+      badge.textContent = religion.name;
+      badges.appendChild(badge);
+    });
+
+    const source = document.createElement('footer');
+    source.className = 'city-panel-source';
+    source.textContent = 'Source: ' + city.source;
+
+    content.replaceChildren(
+      heading,
+      meta,
+      makeCityPanelSection('Dynastic control', dynastyWrap),
+      makeCityPanelSection('Scholar summary', summary),
+      makeCityPanelSection('Key fact', quote),
+      makeCityPanelSection('Religions present', badges),
+      source
+    );
+
+    panel.style.display = 'block';
+    panel.setAttribute('aria-hidden', 'false');
+  }
+
+  function attachCityPanelControls() {
+    const panel = document.getElementById('city-panel');
+    const closeButton = panel ? panel.querySelector('.city-panel-close') : null;
+    if (closeButton) {
+      closeButton.addEventListener('click', () => {
+        panel.style.display = 'none';
+        panel.setAttribute('aria-hidden', 'true');
+      });
+    }
+
+    const knownCityIds = new Set(window.SILK_ROAD_DATA.CITIES.map((city) => city.id));
+    document.querySelectorAll('svg [data-city-id], svg [data-city], svg [id]').forEach((marker) => {
+      const cityId = marker.dataset.cityId || marker.dataset.city || marker.id;
+      if (!knownCityIds.has(cityId)) return;
+      marker.setAttribute('onclick', 'openCityPanel("' + cityId + '")');
+      marker.setAttribute('tabindex', '0');
+      marker.setAttribute('role', 'button');
+      marker.style.cursor = 'pointer';
+      marker.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          openCityPanel(cityId);
+        }
+      });
+    });
+  }
+
+  window.openCityPanel = openCityPanel;
+  attachCityPanelControls();
+</script>
+</body>
+</html>
